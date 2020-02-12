@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: arangodb-backup
+  namespace: arangodb  
+spec:       
+  template:
+    metadata:    
+      labels:
+        name: arangodb-backup
+    spec:  
+      containers:
+      - command:
+        - /bin/sh
+        - -c
+        - |          
+          cd /mnt/backup
+          arangodump --output-directory /mnt/backup/backup-arangodb --server.database tetra_track --server.endpoint "http+tcp://core-cluster.arangodb:8529" --server.password "6069aa97e3bb79a77126c5279dd00082ddc85d463253fb9ece51d605b9901264"          
+          tar c -vzf backup_arangodb_2020_02_11_12_04.tar.gz backup-arangodb/        
+        name: backup2
+        image: arangodb:3.4.8
+        imagePullPolicy: Always
+        tty: true
+        volumeMounts:
+        - mountPath: /mnt/backup
+          name: backup2
+      restartPolicy: Never
+      volumes:          
+      - name: backup2
+        persistentVolumeClaim:
+          claimName: backup-arangodb-teste
